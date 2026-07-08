@@ -48,6 +48,19 @@ remembered with a cookie). Leave `ACCESS_KEY` unset to keep the app open and rel
 only on the per-kid codes + Parent PIN. This is light, family-grade protection —
 not bank-grade security.
 
+## Ask Buddy — the in-app AI tutor (optional)
+The Help & Buddy screen lets a learner ask coding questions and get kid-friendly
+answers. To turn on real AI answers, add an environment variable on Railway:
+
+- `ANTHROPIC_API_KEY` = your Anthropic API key (from console.anthropic.com)
+- (optional) `ANTHROPIC_MODEL` = defaults to `claude-3-5-haiku-latest`
+
+The server proxies questions with a strict kid-safe, Python-only tutor prompt, and
+every question a child asks is also copied into the parent's **Messages &
+Questions** thread so you can see what they're learning. **Without** the key, the
+app still works — Ask Buddy falls back to answering from the built-in Word Book,
+and messaging your grown-up still works normally.
+
 ## Backup & restore
 Open the **Parent Console → 💾 Backup & Restore**:
 - **Download backup** saves every profile + all progress to a `.json` file.

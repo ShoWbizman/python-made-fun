@@ -52,8 +52,8 @@ const DATA_FILE = path.join(DATA_DIR, 'family.json');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 function loadDB() {
-  try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); }
-  catch (e) { return { accounts: null, progress: {}, sandbox: {} }; }
+  try { const d = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); if (!d.messages) d.messages = {}; return d; }
+  catch (e) { return { accounts: null, progress: {}, sandbox: {}, messages: {} }; }
 }
 function saveDB(db) {
   try { fs.writeFileSync(DATA_FILE, JSON.stringify(db)); } catch (e) { console.error('save failed', e); }
@@ -69,7 +69,48 @@ app.put('/api/progress/:id', (req, res) => { db.progress[req.params.id] = req.bo
 
 app.put('/api/sandbox/:id', (req, res) => { db.sandbox[req.params.id] = req.body; saveDB(db); res.json({ ok: true }); });
 
-app.delete('/api/user/:id', (req, res) => { delete db.progress[req.params.id]; delete db.sandbox[req.params.id]; saveDB(db); res.json({ ok: true }); });
+app.delete('/api/user/:id', (req, res) => { delete db.progress[req.params.id]; delete db.sandbox[req.params.id]; delete db.messages[req.params.id]; saveDB(db); res.json({ ok: true }); });
+
+// --- messages (learner <-> parent) ---
+// Append one message to a learner's thread.
+app.post('/api/messages/:id', (req, res) => {
+  if (!db.messages) db.messages = {};
+  if (!db.messages[req.params.id]) db.messages[req.params.id] = [];
+  db.messages[req.params.id].push(req.body);
+  if (db.messages[req.params.id].length > 400) db.messages[req.params.id] = db.messages[req.params.id].slice(-400);
+  saveDB(db); res.json({ ok: true });
+});
+// Replace a learner's whole thread (used for marking messages read).
+app.put('/api/messages/:id', (req, res) => { if (!db.messages) db.messages = {}; db.messages[req.params.id] = req.body; saveDB(db); res.json({ ok: true }); });
+
+// --- Ask Buddy (AI tutor) ---
+// Proxies to Anthropic if ANTHROPIC_API_KEY is set. Kid-safe, Python-focused.
+// If no key is configured, returns 503 and the app falls back to its built-in
+// Word Book answers so nothing breaks.
+const AI_KEY = process.env.ANTHROPIC_API_KEY || '';
+const AI_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-latest';
+app.post('/api/ask', async (req, res) => {
+  const question = String((req.body && req.body.question) || '').slice(0, 500);
+  const name = String((req.body && req.body.name) || 'friend').slice(0, 40);
+  if (!AI_KEY) return res.status(503).json({ error: 'no_ai' });
+  if (!question) return res.status(400).json({ error: 'empty' });
+  const system = "You are 'Buddy', a warm, encouraging coding tutor for a child aged 8-12 who is learning Python. " +
+    "Rules: keep answers SHORT (2-5 sentences), use simple kid-friendly words, be cheerful and use at most one emoji. " +
+    "Give tiny Python examples when helpful, wrapped in plain text. Only talk about Python and learning to code; " +
+    "if asked about anything unsafe or off-topic, gently steer back to coding and suggest they ask their grown-up. " +
+    "Never ask for or repeat personal information. The child's name is " + name + ".";
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': AI_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: AI_MODEL, max_tokens: 400, system: system, messages: [{ role: 'user', content: question }] })
+    });
+    if (!r.ok) { const t = await r.text(); console.error('AI error', r.status, t); return res.status(502).json({ error: 'ai_failed' }); }
+    const data = await r.json();
+    const answer = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
+    res.json({ answer: answer });
+  } catch (e) { console.error('AI exception', e); res.status(502).json({ error: 'ai_failed' }); }
+});
 
 // --- static app ---
 app.use(express.static(__dirname));
