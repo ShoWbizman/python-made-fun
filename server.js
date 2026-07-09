@@ -90,20 +90,31 @@ app.put('/api/messages/:id', (req, res) => { if (!db.messages) db.messages = {};
 const AI_KEY = process.env.ANTHROPIC_API_KEY || '';
 const AI_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-latest';
 app.post('/api/ask', async (req, res) => {
-  const question = String((req.body && req.body.question) || '').slice(0, 500);
-  const name = String((req.body && req.body.name) || 'friend').slice(0, 40);
+  const b = req.body || {};
+  const question = String(b.question || '').slice(0, 1000);
+  const name = String(b.name || 'friend').slice(0, 40);
+  const context = String(b.context || '').slice(0, 2000);
+  const history = Array.isArray(b.history) ? b.history.slice(-8).filter(m => m && m.content && (m.role === 'user' || m.role === 'assistant')).map(m => ({ role: m.role, content: String(m.content).slice(0, 1500) })) : [];
   if (!AI_KEY) return res.status(503).json({ error: 'no_ai' });
   if (!question) return res.status(400).json({ error: 'empty' });
-  const system = "You are 'Buddy', a warm, encouraging coding tutor for a child aged 8-12 who is learning Python. " +
-    "Rules: keep answers SHORT (2-5 sentences), use simple kid-friendly words, be cheerful and use at most one emoji. " +
-    "Give tiny Python examples when helpful, wrapped in plain text. Only talk about Python and learning to code; " +
-    "if asked about anything unsafe or off-topic, gently steer back to coding and suggest they ask their grown-up. " +
-    "Never ask for or repeat personal information. The child's name is " + name + ".";
+  const system = "You are 'Buddy', a warm, patient coding tutor for a child aged 8-12 learning Python. The child's name is " + name + ".\n\n" +
+    "HOW TO TEACH:\n" +
+    "- Answer the ACTUAL question clearly and in enough detail to truly understand — it's fine to use a few short paragraphs when the topic needs it.\n" +
+    "- Explain the WHY, not just the what. Use a simple real-world comparison a kid would get.\n" +
+    "- Almost always include a tiny, correct Python example, written on its own lines so it's easy to read.\n" +
+    "- If helpful, end with one friendly 'Try this in the Sandbox' idea.\n" +
+    "- Break longer answers into short lines and simple steps. Warm, encouraging tone; at most one or two emoji.\n" +
+    "- Use vocabulary an 8-12 year old understands; define any big word you use.\n\n" +
+    "IMPORTANT: Use the context about what the child is currently learning to tailor your answer and examples to that exact topic. " +
+    "If they seem stuck on their current lesson, gently guide them toward the idea WITHOUT just handing over the final answer to the challenge — help them think.\n\n" +
+    "SAFETY: Only discuss Python, programming, math, and learning. For anything off-topic or unsafe, kindly say that's one for their grown-up and steer back to code. Never ask for personal information." +
+    (context ? ("\n\nCONTEXT — what the child is doing right now:\n" + context) : "");
+  const messages = history.concat([{ role: 'user', content: question }]);
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': AI_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: AI_MODEL, max_tokens: 400, system: system, messages: [{ role: 'user', content: question }] })
+      body: JSON.stringify({ model: AI_MODEL, max_tokens: 700, system: system, messages: messages })
     });
     if (!r.ok) { const t = await r.text(); console.error('AI error', r.status, t); return res.status(502).json({ error: 'ai_failed' }); }
     const data = await r.json();

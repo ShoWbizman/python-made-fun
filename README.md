@@ -6,8 +6,15 @@ progress sync**.
 
 This folder is everything you need to host it on [Railway](https://railway.app).
 
+## The learning path (beginner → master)
+19 worlds, each with lessons + a stage-gate test, plus a Project Workshop:
+1–9 (Basics): print, variables & input, math, if/else, loops, lists, dictionaries, functions, and a game-building capstone.
+10–18 (Advanced): f-strings & string methods, advanced loops (break/continue/enumerate), list & dict comprehensions, tuples/sets/nested data, advanced functions (defaults, *args, recursion), errors (try/except/raise), object-oriented classes & inheritance, libraries & JSON, and algorithms (search/sort/count).
+19 (Master's Summit): combine everything into real programs.
+Projects unlock as worlds are cleared — from a Greeting Bot up to a class-based Virtual Pet.
+
 ## What's in here
-- `index.html` — the whole app (self-contained, ~950 KB)
+- `index.html` — the whole app (self-contained, ~1 MB)
 - `server.js` — a tiny Node/Express server that serves the app and stores progress
 - `package.json` — dependencies + start script
 
