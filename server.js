@@ -123,6 +123,38 @@ app.post('/api/ask', async (req, res) => {
   } catch (e) { console.error('AI exception', e); res.status(502).json({ error: 'ai_failed' }); }
 });
 
+// --- Teach-back grading (the "can teach others" step) ---
+// Grades a child's plain-language explanation of a concept. Returns {pass, feedback}.
+// Falls back to client-side keyword grading if no AI key.
+app.post('/api/teachback', async (req, res) => {
+  const b = req.body || {};
+  const concept = String(b.concept || '').slice(0, 400);
+  const topic = String(b.topic || '').slice(0, 120);
+  const answer = String(b.answer || '').slice(0, 1500);
+  const name = String(b.name || 'friend').slice(0, 40);
+  if (!AI_KEY) return res.status(503).json({ error: 'no_ai' });
+  if (!answer) return res.status(400).json({ error: 'empty' });
+  const system = "You are 'Buddy', a kind coding teacher grading how well a child (age 8-12) named " + name +
+    " explained a Python idea in their OWN words — the 'teach it back' step that proves real understanding.\n" +
+    "The topic is: " + topic + ". The question they answered: " + concept + "\n\n" +
+    "Be encouraging but honest. PASS them if the explanation is mostly correct and shows they understand the core idea, even if the words are simple or a little messy. FAIL only if it's blank, wrong, or clearly copied without understanding.\n" +
+    "Reply ONLY as strict JSON: {\"pass\": true/false, \"feedback\": \"...\"}. " +
+    "feedback = 1-3 short, warm sentences: praise what they got right, then ONE thing to add or correct. Speak to the child. At most one emoji. No markdown.";
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': AI_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: AI_MODEL, max_tokens: 300, system: system, messages: [{ role: 'user', content: answer }] })
+    });
+    if (!r.ok) { const t = await r.text(); console.error('teachback error', r.status, t); return res.status(502).json({ error: 'ai_failed' }); }
+    const data = await r.json();
+    const txt = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
+    let parsed = null; try { parsed = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1)); } catch (e) {}
+    if (parsed && typeof parsed.pass === 'boolean') return res.json({ pass: parsed.pass, feedback: String(parsed.feedback || '') });
+    return res.status(502).json({ error: 'parse_failed' });
+  } catch (e) { console.error('teachback exception', e); res.status(502).json({ error: 'ai_failed' }); }
+});
+
 // --- static app ---
 app.use(express.static(__dirname));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));

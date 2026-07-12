@@ -12,6 +12,12 @@ This folder is everything you need to host it on [Railway](https://railway.app).
 1. 📖 Learn the concept. 2. 🔮 Predict what code prints (read before you run). 3. 🐛 Fix a bug. 4. 🔨 Build it yourself. 5. 🎓 Teach it back in your own words — Buddy (AI) grades the explanation and coaches. A lesson only counts as *mastered* when all steps are done.
 
 1–9 (Basics): print, variables & input, math, if/else, loops, lists, dictionaries, functions, and a game-building capstone.
+10–18 (Advanced): f-strings & string methods, advanced loops, comprehensions, tuples/sets, advanced functions, errors, OOP, libraries/JSON, algorithms. 19: Master's Summit.
+
+**Beyond lessons — the mastery extras:**
+- **Stage-gate tests** now mix multiple-choice + predict-the-output + write-real-code questions, need **85%** to pass, and give a **speed bonus** (+30 XP) for beating the clock.
+- **🧠 Brain Gym** on the home map: a **Daily Challenge** (rotates daily, keeps the streak alive), **Review Checkpoints** that remix questions from earlier worlds, **Teacher Mode** (he writes his own quiz questions — shared to the Parent Console), and a **Cheat Sheet** of quick notes for every world.
+- **Per-world mastery score** (🧠 %) shows *understood*, not just *done*.
 10–18 (Advanced): f-strings & string methods, advanced loops (break/continue/enumerate), list & dict comprehensions, tuples/sets/nested data, advanced functions (defaults, *args, recursion), errors (try/except/raise), object-oriented classes & inheritance, libraries & JSON, and algorithms (search/sort/count).
 19 (Master's Summit): combine everything into real programs.
 Projects unlock as worlds are cleared — from a Greeting Bot up to a class-based Virtual Pet.
