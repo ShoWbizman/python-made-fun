@@ -88,7 +88,7 @@ app.put('/api/messages/:id', (req, res) => { if (!db.messages) db.messages = {};
 // If no key is configured, returns 503 and the app falls back to its built-in
 // Word Book answers so nothing breaks.
 const AI_KEY = process.env.ANTHROPIC_API_KEY || '';
-const AI_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-latest';
+const AI_MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5';
 app.post('/api/ask', async (req, res) => {
   const b = req.body || {};
   const question = String(b.question || '').slice(0, 1000);
