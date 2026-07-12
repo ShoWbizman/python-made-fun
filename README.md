@@ -7,7 +7,10 @@ progress sync**.
 This folder is everything you need to host it on [Railway](https://railway.app).
 
 ## The learning path (beginner → master)
-19 worlds, each with lessons + a stage-gate test, plus a Project Workshop:
+19 worlds, each with lessons + a stage-gate test, plus a Project Workshop.
+**Every lesson is a 5-step mastery loop — not a quick fill-in:**
+1. 📖 Learn the concept. 2. 🔮 Predict what code prints (read before you run). 3. 🐛 Fix a bug. 4. 🔨 Build it yourself. 5. 🎓 Teach it back in your own words — Buddy (AI) grades the explanation and coaches. A lesson only counts as *mastered* when all steps are done.
+
 1–9 (Basics): print, variables & input, math, if/else, loops, lists, dictionaries, functions, and a game-building capstone.
 10–18 (Advanced): f-strings & string methods, advanced loops (break/continue/enumerate), list & dict comprehensions, tuples/sets/nested data, advanced functions (defaults, *args, recursion), errors (try/except/raise), object-oriented classes & inheritance, libraries & JSON, and algorithms (search/sort/count).
 19 (Master's Summit): combine everything into real programs.
